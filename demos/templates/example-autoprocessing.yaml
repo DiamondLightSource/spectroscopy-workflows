@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ClusterWorkflowTemplate
 metadata:
-  name: b18-autoprocessing
+  name: example-autoprocessing
 
   labels:
     workflows.diamond.ac.uk/science-group-spectroscopy: "true"
@@ -17,7 +17,6 @@ metadata:
     workflows.diamond.ac.uk/parameter-schema: |
       {{- .Files.Get "schemas/b18-autoprocessing.json" | nindent 6 }}
     # using default UI schema for now 
-
 
 spec:
   entrypoint: workflow-entry
