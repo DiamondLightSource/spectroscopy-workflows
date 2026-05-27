@@ -131,6 +131,7 @@ spec:
               return allmatch
 
         paths = group_files(scan_numbers)
+        data = read_data(paths)
 
         with h5py.File("/tmp/DATA.nxs", "w") as f:
           f.create_dataset(name="energy", data = data.energy)
