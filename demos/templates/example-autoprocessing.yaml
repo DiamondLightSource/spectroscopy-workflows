@@ -7,7 +7,7 @@ metadata:
   labels:
     workflows.diamond.ac.uk/science-group-spectroscopy: "true"
   annotations:
-    workflows.argoproj.io/title: "b18 Autoprocessing Routines"
+    workflows.argoproj.io/title: "Example Autoprocessing Routines"
     workflows.argoproj.io/description: |
         Run b18 snr + repetitions routines from autoprocessing notebooks. \\
         This will either use fake data or Cu formate scans in the directory: 
@@ -15,7 +15,7 @@ metadata:
     workflows.diamond.ac.uk/repository: |
         "https://github.com/DiamondLightSource/spectroscopy-workflows"
     workflows.diamond.ac.uk/parameter-schema: |
-      {{- .Files.Get "schemas/b18-autoprocessing.json" | nindent 6 }}
+      {{- .Files.Get "schema/example-autoprocessing.json" | nindent 6 }}
     # using default UI schema for now 
 
 spec:
