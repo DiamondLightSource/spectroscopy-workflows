@@ -1,1 +1,4 @@
 charts:
+
+manifests:
+  - demos/templates
