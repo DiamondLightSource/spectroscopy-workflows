@@ -1,0 +1,293 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: example-autoprocessing
+
+  labels:
+    workflows.diamond.ac.uk/science-group-spectroscopy: "true"
+  annotations:
+    workflows.argoproj.io/title: "Example Autoprocessing Routines"
+    workflows.argoproj.io/description: |
+        Run b18 snr + repetitions routines from autoprocessing notebooks. \\
+        This will either use fake data or Cu formate scans in the directory: 
+        /dls/science/groups/das/ExampleData/b18/nexus.
+    workflows.diamond.ac.uk/repository: |
+        "https://github.com/DiamondLightSource/spectroscopy-workflows"
+    workflows.diamond.ac.uk/parameter-schema: |
+      {{- .Files.Get "schema/example-autoprocessing.json" | nindent 6 }}
+    # using default UI schema for now 
+
+spec:
+  entrypoint: workflow-entry
+  arguments:
+    parameters:
+      - name: generate_data
+      - name: nscans
+      - name: formula
+      - name: absorbing_atom
+      - name: edge
+      - name: scan_numbers
+
+  volumeClaimTemplates:
+  - metadata:
+      name: tmpdir
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: netapp
+
+  templates:
+  - name: make-fake-data
+    script:
+      image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
+      volumeMounts:
+        - name: tmpdir
+          mountPath: /tmp
+      workingDir: /tmp
+      env:
+        - name: HOME
+          value: /tmp
+        - name: LARCHDIR
+          value: /tmp/.larch
+      command: [python]
+      source: |
+
+        from xas_toolbox.xas.data_generation.fake_scans import make_fake_spectrum
+        import h5py
+
+        formula = "{{ workflow.parameters.formula }}"
+        absorber = "{{ workflow.parameters.absorbing_atom }}"
+        edge = "{{ workflow.parameters.edge }}"
+        nscans = int("{{ workflow.parameters.nscans }}")
+
+        out = make_fake_spectrum(formula=formula, absorber=absorber,
+                                  edge=edge, nscans=nscans)
+
+        with h5py.File("/tmp/DATA.nxs", "w") as f:
+          f.create_dataset(name="energy", data=out.energy)
+          f.create_dataset(name="mu", data=out.mu)
+          meta = f.create_group("meta")
+          for k, v in {"formula": formula, "absorber": absorber, "edge": edge}.items():
+            meta.create_dataset(name=k, data=v, dtype=h5py.string_dtype())
+    outputs:
+      artifacts:
+        - name: xy-data
+          path: "/tmp/DATA.nxs"
+          archive:
+            none: { }
+
+  - name: read-Cu-data
+    script:
+      image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
+      volumeMounts:
+        - name: datadir
+          mountPath: /data
+        - name: tmpdir
+          mountPath: /tmp
+      env:
+        - name: HOME
+          value: /tmp
+        - name: LARCHDIR
+          value: /tmp/larch
+        - name: MPLCONFIGDIR
+          value: /tmp/mpl
+      command: [python]
+      source: |
+        from xas_toolbox.io import read_data
+        import os; import re; import numpy as np
+        import h5py
+
+        scan_numbers = "{{ workflow.parameters.scan_numbers }}"
+        files = os.listdir("/data")
+
+        # a function to parse file-numbers:
+        def group_files(pattern:str)->list|str:
+          file_range = None
+          if "," in pattern:
+              file_range = pattern.replace(" ", "").split(",")
+          elif "-" in pattern:
+              file_range = np.arange(int(pattern.split("-")[0]), int(pattern.split("-")[-1])+1)
+          else:
+              file_range = [pattern]
+          allmatch = []
+          if file_range is not None:
+              for f in file_range:
+                  pattern = f"\d{{6}}_Cu_formate_{f}.nxs"
+                  try:
+                      allmatch.append(re.findall(pattern, str(files))[0])
+                  except:
+                      continue
+
+          if len(allmatch) < 1:
+              raise ValueError("Scan number not found.")
+        
+          allmatch = [f"/data/{f}" for f in allmatch]
+          if len(allmatch) == 1:
+              return allmatch[0]
+          else:
+              return allmatch
+
+        paths = group_files(scan_numbers)
+
+        with h5py.File("/tmp/DATA.nxs", "w") as f:
+          f.create_dataset(name="energy", data = data.energy)
+          f.create_dataset(name="mu", data=data.mu)
+
+    volumes:
+      - name: datadir
+        hostPath:
+          path: /dls/science/groups/das/ExampleData/b18/nexus
+          type: Directory
+
+    outputs:
+      artifacts:
+        - name: DATA
+          path: "/tmp/DATA.nxs"
+          archive:
+            none: { }
+
+  - name: b18-repetitions
+    script:
+      image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
+      volumeMounts:
+        - name: tmpdir
+          mountPath: /tmp
+      env:
+        - name: HOME
+          value: /tmp/home
+        - name: LARCHDIR
+          value: /tmp/larch
+      command: [python]
+      source: |
+        from xas_toolbox.io import XasMeasurement
+        from xas_toolbox.xas.alignment import align_stack
+        from xas_toolbox.xas.diagnostics.repetition_metrics import repetition_average
+        from xas_toolbox.xas.diagnostics.plotting import plot_repetition_metrics
+        import h5py
+
+        file = "/tmp/DATA.nxs"
+
+        def get_fn(val):
+          if val == "energy":
+            with h5py.File(file, "r") as f:
+              out = f["energy"][...]
+          elif val == "mu" or val == "mutrans":
+            with h5py.File(file, "r") as f:
+              out = f["mu"][...]
+          else: out = None
+          return out
+
+        data = XasMeasurement(get_value=get_fn, mode="transmisison")
+        if data.energy.ndim > 1:
+          data = align_stack(data)
+        
+        mean_data = repetition_average(data)
+        figures = plot_repetition_metrics(mean_data)
+
+        for i in range(len(figures)):
+          f = figures[i]
+          f.savefig(f"/tmp/repetitions_{i}.png")
+    outputs:
+      artifacts:
+        - name: repetitions-fig-0
+          path: "/tmp/repetitions_0.png"
+          archive:
+            none: { }
+        - name: repetitions-fig-1
+          path: "/tmp/repetitions_1.png"
+          archive:
+            none: { }
+        - name: repetitions-fig-2
+          path: "/tmp/repetitions_2.png"
+          archive:
+            none: { }
+        - name: repetitions-fig-3
+          path: "/tmp/repetitions_3.png"
+          archive:
+            none: { }
+
+  - name: b18-snr
+    script:
+      image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
+      volumeMounts:
+        - name: tmpdir
+          mountPath: /tmp
+      env:
+        - name: HOME
+          value: /tmp
+        - name: LARCHDIR
+          value: /tmp/larch
+      command: [python]
+      source: |
+        import h5py
+        from xas_toolbox.io import XasMeasurement
+        from xas_toolbox.xas.alignment import align_stack
+        from xas_toolbox.xas.diagnostics import snr_metrics, plot_snr_metrics
+
+        file = "/tmp/DATA.nxs"
+
+        def get_fn(val):
+          if val == "energy":
+            with h5py.File(file, "r") as f:
+              out = f["energy"][...]
+          elif val == "mu" or val == "mutrans":
+            with h5py.File(file, "r") as f:
+              out = f["mu"][...]
+          else: out = None
+          return out
+        
+        data = XasMeasurement(get_value=get_fn, mode="transmisison")
+        if data.energy.ndim > 1:
+          data = align_stack(data)
+        
+        vals = snr_metrics(data)
+        
+        # these are: noise_poly, knoise, kmax, group_0, avr_group
+        # noisy_poly, knoise and kmax should be written to an output file?
+
+        figures = plot_snr_metrics(*vals)
+
+        for i in range(len(figures)):
+          f = figures[i]
+          f.savefig(f"/tmp/snr_{i}.png")
+    outputs:
+      artifacts:
+        - name: snr-fig-0
+          path: "/tmp/snr_0.png"
+          archive:
+            none: { }
+        - name: snr-fig-1
+          path: "/tmp/snr_1.png"
+          archive:
+            none: { }
+        - name: snr-fig-2
+          path: "/tmp/snr_2.png"
+          archive:
+            none: { }
+        - name: snr-fig-3
+          path: "/tmp/snr_3.png"
+          archive:
+            none: { }
+
+  - name: workflow-entry
+    dag:
+      tasks:
+        - name: make-fake-data
+          template: make-fake-data
+          when: "{{ workflow.parameters.generate_data }} == true"
+        
+        - name: read-Cu-data
+          template: read-Cu-data
+          when: "{{ workflow.parameters.generate_data }} == false"
+        
+        - name: repetitions-routine
+          template: b18-repetitions
+          depends: read-Cu-data || make-fake-data
+        
+        - name: snr-routine
+          template: b18-snr
+          depends: read-Cu-data || make-fake-data
+

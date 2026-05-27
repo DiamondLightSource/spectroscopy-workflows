@@ -1,0 +1,42 @@
+{
+"type": "object",
+
+"properties": {
+
+    "generate_data": {
+        "type": "boolean",
+        "default": true
+        },
+
+    "nscans": {
+        "type": "string",
+        "default": "5",
+        "pattern": "^\\d+$"
+        },
+
+    "formula": {
+        "type": "string",
+        "default": "TiO",
+        "pattern": "^([A-Z][a-z]?\\d*)[A-Z]?[a-z]?\\d*"
+        },
+
+    "absorbing_atom": {
+        "type": "string",
+        "default": "Ti",
+        "pattern": "^[A-Z]\\w{0,1}$"
+        },
+
+    "edge": {
+        "type": "string",
+        "default": "K",
+        "pattern": "^[A-Z]\\d?"
+        },
+
+        "scan_numbers": {
+            "type": "string",
+            "default": "1, 2 | 5 | 1-26",
+            "pattern": "(^[0-9]+-[0-9]+$)|(^[0-9]+(, ?[0-9]+)*?$)"
+        }
+        
+}
+}
