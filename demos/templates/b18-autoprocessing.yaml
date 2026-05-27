@@ -1,0 +1,166 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: b18-autoprocessing
+
+  labels:
+    workflows.diamond.ac.uk/science-group-spectroscopy: "true"
+  annotations:
+    workflows.argoproj.io/title: "b18 Autoprocessing Routines"
+    workflows.argoproj.io/description: |
+        Run b18 snr + repetitions routines from autoprocessing notebooks. \\
+        This will either use fake data or Cu formate scans in the directory: 
+        /dls/science/groups/das/ExampleData/b18/nexus.
+    workflows.diamond.ac.uk/repository: |
+        "https://github.com/DiamondLightSource/spectroscopy-workflows"
+    workflows.diamond.ac.uk/parameter-schema: |
+      {{- .Files.Get "schemas/b18-autoprocessing.json" | nindent 6 }}
+    # using default UI schema for now 
+
+
+spec:
+  entrypoint: workflow-entry
+  arguments:
+    parameters:
+      - name: generate_data
+      - name: nscans
+      - name: formula
+      - name: absorbing_atom
+      - name: edge
+      - name: scan_numbers
+
+  volumeClaimTemplates:
+  - metadata:
+      name: tmpdir
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: netapp
+
+  templates:
+  
+  - name: make-fake-data
+    script:
+      image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
+      volumeMounts:
+        - name: tmpdir
+          mountPath: /tmp
+      workingDir: /tmp
+      env:
+        - name: HOME
+          value: /tmp
+        - name: LARCHDIR
+          value: /tmp/.larch
+      command: [python]
+      source: |
+
+        from xas_toolbox.xas.data_generation.fake_scans import make_fake_spectrum
+        import h5py
+
+        formula = "{{ workflow.parameters.formula }}"
+        absorber = "{{ workflow.parameters.absorbing_atom }}"
+        edge = "{{ workflow.parameters.edge }}"
+        nscans = int("{{ workflow.parameters.nscans }}")
+
+        out = make_fake_spectrum(formula=formula, absorber=absorber,
+                                  edge=edge, nscans=nscans)
+
+        with h5py.File("/tmp/DATA.nxs", "w") as f:
+          f.create_dataset(name="energy", data=out.energy)
+          f.create_dataset(name="mu", data=out.mu)
+          meta = f.create_group("meta")
+          for k, v in {"formula": formula, "absorber": absorber, "edge": edge}.items():
+            meta.create_dataset(name=k, data=v, dtype=h5py.string_dtype())
+    outputs:
+      artifacts:
+        - name: xy-data
+          path: "/tmp/DATA.nxs"
+          archive:
+            none: { }
+
+  - name: read-Cu-data
+    script:
+      image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
+      volumeMounts:
+        - name: datadir
+          mountPath: /data
+        - name: tmpdir
+          mountPath: /tmp
+      env:
+        - name: HOME
+          value: /tmp
+        - name: LARCHDIR
+          value: /tmp/larch
+        - name: MPLCONFIGDIR
+          value: /tmp/mpl
+      command: [python]
+      source: |
+        from xas_toolbox.io import read_data
+        import os; import re; import numpy as np
+        import h5py
+
+        scan_numbers = "{{ workflow.parameters.scan_numbers }}"
+        files = os.listdir("/data")
+
+        # a function to parse file-numbers:
+        def group_files(pattern:str)->list|str:
+          file_range = None
+          if "," in pattern:
+              file_range = pattern.replace(" ", "").split(",")
+          elif "-" in pattern:
+              file_range = np.arange(int(pattern.split("-")[0]), int(pattern.split("-")[-1])+1)
+          else:
+              file_range = [pattern]
+          allmatch = []
+          if file_range is not None:
+              for f in file_range:
+                  pattern = f"\d{{6}}_Cu_formate_{f}.nxs"
+                  try:
+                      allmatch.append(re.findall(pattern, str(files))[0])
+                  except:
+                      continue
+
+          if len(allmatch) < 1:
+              raise ValueError("Scan number not found.")
+        
+          allmatch = [f"/data/{f}" for f in allmatch]
+          if len(allmatch) == 1:
+              return allmatch[0]
+          else:
+              return allmatch
+
+        paths = group_files(scan_numbers)
+
+        with h5py.File("/tmp/DATA.nxs", "w") as f:
+          f.create_dataset(name="energy", data = data.energy)
+          f.create_dataset(name="mu", data=data.mu)
+
+    volumes:
+      - name: datadir
+        hostPath:
+          path: /dls/science/groups/das/ExampleData/b18/nexus
+          type: Directory
+
+    outputs:
+      artifacts:
+        - name: DATA
+          path: "/tmp/DATA.nxs"
+          archive:
+            none: { }
+
+  - name: workflow-entry
+    dag:
+      tasks:
+        - name: make-fake-data
+          template: make-fake-data
+          when: "{{ workflow.parameters.generate_data }} == true"
+        
+        - name: read-Cu-data
+          template: read-Cu-data
+          when: "{{ workflow.parameters.generate_data }} == false"
+        
+        # to add final part..
+
