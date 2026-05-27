@@ -151,6 +151,129 @@ spec:
           archive:
             none: { }
 
+  - name: b18-repetitions
+    script:
+      image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
+      volumeMounts:
+        - name: tmpdir
+          mountPath: /tmp
+      env:
+        - name: HOME
+          value: /tmp/home
+        - name: LARCHDIR
+          value: /tmp/larch
+      command: [python]
+      source: |
+        from xas_toolbox.io import XasMeasurement
+        from xas_toolbox.xas.alignment import align_stack
+        from xas_toolbox.xas.diagnostics.repetition_metrics import repetition_average
+        from xas_toolbox.xas.diagnostics.plotting import plot_repetition_metrics
+        import h5py
+
+        file = "/tmp/DATA.nxs"
+
+        def get_fn(val):
+          if val == "energy":
+            with h5py.File(file, "r") as f:
+              out = f["energy"][...]
+          elif val == "mu" or val == "mutrans":
+            with h5py.File(file, "r") as f:
+              out = f["mu"][...]
+          else: out = None
+          return out
+
+        data = XasMeasurement(get_value=get_fn, mode="transmisison")
+        if data.energy.ndim > 1:
+          data = align_stack(data)
+        
+        mean_data = repetition_average(data)
+        figures = plot_repetition_metrics(mean_data)
+
+        for i in range(len(figures)):
+          f = figures[i]
+          f.savefig(f"/tmp/repetitions_{i}.png")
+    outputs:
+      artifacts:
+        - name: repetitions-fig-0
+          path: "/tmp/repetitions_0.png"
+          archive:
+            none: { }
+        - name: repetitions-fig-1
+          path: "/tmp/repetitions_1.png"
+          archive:
+            none: { }
+        - name: repetitions-fig-2
+          path: "/tmp/repetitions_2.png"
+          archive:
+            none: { }
+        - name: repetitions-fig-3
+          path: "/tmp/repetitions_3.png"
+          archive:
+            none: { }
+
+  - name: b18-snr
+    script:
+      image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
+      volumeMounts:
+        - name: tmpdir
+          mountPath: /tmp
+      env:
+        - name: HOME
+          value: /tmp
+        - name: LARCHDIR
+          value: /tmp/larch
+      command: [python]
+      source: |
+        import h5py
+        from xas_toolbox.io import XasMeasurement
+        from xas_toolbox.xas.alignment import align_stack
+        from xas_toolbox.xas.diagnostics import snr_metrics, plot_snr_metrics
+
+        file = "/tmp/DATA.nxs"
+
+        def get_fn(val):
+          if val == "energy":
+            with h5py.File(file, "r") as f:
+              out = f["energy"][...]
+          elif val == "mu" or val == "mutrans":
+            with h5py.File(file, "r") as f:
+              out = f["mu"][...]
+          else: out = None
+          return out
+        
+        data = XasMeasurement(get_value=get_fn, mode="transmisison")
+        if data.energy.ndim > 1:
+          data = align_stack(data)
+        
+        vals = snr_metrics(data)
+        
+        # these are: noise_poly, knoise, kmax, group_0, avr_group
+        # noisy_poly, knoise and kmax should be written to an output file?
+
+        figures = plot_snr_metrics(*vals)
+
+        for i in range(len(figures)):
+          f = figures[i]
+          f.savefig(f"/tmp/snr_{i}.png")
+    outputs:
+      artifacts:
+        - name: snr-fig-0
+          path: "/tmp/snr_0.png"
+          archive:
+            none: { }
+        - name: snr-fig-1
+          path: "/tmp/snr_1.png"
+          archive:
+            none: { }
+        - name: snr-fig-2
+          path: "/tmp/snr_2.png"
+          archive:
+            none: { }
+        - name: snr-fig-3
+          path: "/tmp/snr_3.png"
+          archive:
+            none: { }
+
   - name: workflow-entry
     dag:
       tasks:
@@ -162,5 +285,11 @@ spec:
           template: read-Cu-data
           when: "{{ workflow.parameters.generate_data }} == false"
         
-        # to add final part..
+        - name: repetitions-routine
+          template: b18-repetitions
+          depends: read-Cu-data || make-fake-data
+        
+        - name: snr-routine
+          template: b18-snr
+          depends: read-Cu-data || make-fake-data
 
