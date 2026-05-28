@@ -1,9 +1,7 @@
-
 apiVersion: argoproj.io/v1alpha1
 kind: ClusterWorkflowTemplate
 metadata:
   name: example-autoprocessing
-
   labels:
     workflows.diamond.ac.uk/science-group-spectroscopy: "true"
   annotations:
@@ -16,10 +14,9 @@ metadata:
         "https://github.com/DiamondLightSource/spectroscopy-workflows"
     workflows.diamond.ac.uk/parameter-schema: |
       {{- .Files.Get "schema/example-autoprocessing.json" | nindent 6 }}
-    # using default UI schema for now 
 
 spec:
-  entrypoint: workflow-entry
+  entrypoint: start
   arguments:
     parameters:
       - name: generate_data
@@ -41,6 +38,7 @@ spec:
 
   templates:
   - name: make-fake-data
+
     script:
       image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
       volumeMounts:
@@ -58,10 +56,10 @@ spec:
         from xas_toolbox.xas.data_generation.fake_scans import make_fake_spectrum
         import h5py
 
-        formula = "{{ workflow.parameters.formula }}"
-        absorber = "{{ workflow.parameters.absorbing_atom }}"
-        edge = "{{ workflow.parameters.edge }}"
-        nscans = int("{{ workflow.parameters.nscans }}")
+        formula = "{{ `{{workflow.parameters.formula}}` }}"
+        absorber = "{{ `{{workflow.parameters.absorbing_atom}}` }}"
+        edge = "{{ `{{workflow.parameters.edge}}` }}"
+        nscans = int("{{ `{{workflow.parameters.nscans}}` }}")
 
         out = make_fake_spectrum(formula=formula, absorber=absorber,
                                   edge=edge, nscans=nscans)
@@ -100,7 +98,7 @@ spec:
         import os; import re; import numpy as np
         import h5py
 
-        scan_numbers = "{{ workflow.parameters.scan_numbers }}"
+        scan_numbers = "{{ `{{workflow.parameters.scan_numbers}}` }}"
         files = os.listdir("/data")
 
         # a function to parse file-numbers:
@@ -273,16 +271,16 @@ spec:
           archive:
             none: { }
 
-  - name: workflow-entry
+  - name: start
     dag:
       tasks:
         - name: make-fake-data
           template: make-fake-data
-          when: "{{ workflow.parameters.generate_data }} == true"
-        
+          when: "{{ `{{workflow.parameters.generate_data}}` }} == true"
+
         - name: read-Cu-data
           template: read-Cu-data
-          when: "{{ workflow.parameters.generate_data }} == false"
+          when: "{{ `{{workflow.parameters.generate_data}}` }} == false"
         
         - name: repetitions-routine
           template: b18-repetitions
