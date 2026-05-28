@@ -112,10 +112,9 @@ spec:
               file_range = range(int(pattern.split("-")[0]), int(pattern.split("-")[-1])+1)
           else:
               file_range = [pattern]
-          print("using range: ", file_range)
           allmatch = []
           if file_range is not None:
-              allmatch = [file for file in files for f in file_range\
+              allmatch = [f"/data/{file}" for file in files for f in file_range\
                           if file[6:] == f"_Cu_formate_{f}.nxs"]
 
           if len(allmatch) < 1: raise ValueError("Scan number not found.")

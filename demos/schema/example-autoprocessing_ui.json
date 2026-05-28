@@ -12,16 +12,16 @@
                 {
                 "type": "HorizontalLayout",
                 "elements": [ 
-                        {
-                        "type": "Control",
-                        "scope": "#/properties/formula",
-                        "label": "Chemical Formula"
-                        },
-                        {
-                        "type": "Control",
-                        "scope": "#/properties/generate_data",
-                        "label": "Use Generated Data?"
-                        }
+                    {
+                    "type": "Control",
+                    "scope": "#/properties/generate_data",
+                    "label": "Use Generated Data?"
+                    },
+                    {
+                    "type": "Control",
+                    "scope": "#/properties/formula",
+                    "label": "Chemical Formula"
+                    }
                     ]
                 },
             {
