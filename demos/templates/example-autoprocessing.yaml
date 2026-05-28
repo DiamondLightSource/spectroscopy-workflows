@@ -1,9 +1,7 @@
-
 apiVersion: argoproj.io/v1alpha1
 kind: ClusterWorkflowTemplate
 metadata:
   name: example-autoprocessing
-
   labels:
     workflows.diamond.ac.uk/science-group-spectroscopy: "true"
   annotations:
@@ -16,18 +14,17 @@ metadata:
         "https://github.com/DiamondLightSource/spectroscopy-workflows"
     workflows.diamond.ac.uk/parameter-schema: |
       {{- .Files.Get "schema/example-autoprocessing.json" | nindent 6 }}
-    # using default UI schema for now 
 
 spec:
   entrypoint: workflow-entry
   arguments:
     parameters:
-      - name: generate_data
-      - name: nscans
-      - name: formula
-      - name: absorbing_atom
-      - name: edge
-      - name: scan_numbers
+    - name: generate_data
+    - name: nscans
+    - name: formula
+    - name: absorbing_atom
+    - name: edge
+    - name: scan_numbers
 
   volumeClaimTemplates:
   - metadata:
