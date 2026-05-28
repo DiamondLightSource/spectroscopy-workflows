@@ -16,15 +16,15 @@ metadata:
       {{- .Files.Get "schema/example-autoprocessing.json" | nindent 6 }}
 
 spec:
-  entrypoint: workflow-entry
+  entrypoint: start
   arguments:
     parameters:
-    - name: generate_data
-    - name: nscans
-    - name: formula
-    - name: absorbing_atom
-    - name: edge
-    - name: scan_numbers
+      - name: generate_data
+      - name: nscans
+      - name: formula
+      - name: absorbing_atom
+      - name: edge
+      - name: scan_numbers
 
   volumeClaimTemplates:
   - metadata:
@@ -38,6 +38,16 @@ spec:
 
   templates:
   - name: make-fake-data
+    inputs:
+      parameters:
+        - name: formula
+          value: "{{ workflow.parameters.formula }}"
+        - name: absorbing_atom
+          value: "{{ workflow.parameters.absorbing_atom }}"
+        - name: edge
+          value: "{{ workflow.parameters.edge }}"
+        - name: nscans
+          value: "{{ workflow.parameters.nscans }}"
     script:
       image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
       volumeMounts:
@@ -55,10 +65,10 @@ spec:
         from xas_toolbox.xas.data_generation.fake_scans import make_fake_spectrum
         import h5py
 
-        formula = "{{ workflow.parameters.formula }}"
-        absorber = "{{ workflow.parameters.absorbing_atom }}"
-        edge = "{{ workflow.parameters.edge }}"
-        nscans = int("{{ workflow.parameters.nscans }}")
+        formula = "{{ inputs.parameters.formula }}"
+        absorber = "{{ inputs.parameters.absorbing_atom }}"
+        edge = "{{ inputs.parameters.edge }}"
+        nscans = int("{{ inputs.parameters.nscans }}")
 
         out = make_fake_spectrum(formula=formula, absorber=absorber,
                                   edge=edge, nscans=nscans)
@@ -77,6 +87,10 @@ spec:
             none: { }
 
   - name: read-Cu-data
+    inputs:
+      parameters:
+        - name: scan_numbers
+          value: "{{ workflow.parameters.scan_numbers }}"
     script:
       image: ghcr.io/jacobfilik/python-env-sandbox-xas-toolbox:latest
       volumeMounts:
@@ -97,7 +111,7 @@ spec:
         import os; import re; import numpy as np
         import h5py
 
-        scan_numbers = "{{ workflow.parameters.scan_numbers }}"
+        scan_numbers = "{{ inputs.parameters.scan_numbers }}"
         files = os.listdir("/data")
 
         # a function to parse file-numbers:
@@ -270,13 +284,13 @@ spec:
           archive:
             none: { }
 
-  - name: workflow-entry
+  - name: start
     dag:
       tasks:
         - name: make-fake-data
           template: make-fake-data
           when: "{{ workflow.parameters.generate_data }} == true"
-        
+
         - name: read-Cu-data
           template: read-Cu-data
           when: "{{ workflow.parameters.generate_data }} == false"
