@@ -7,13 +7,15 @@ metadata:
   annotations:
     workflows.argoproj.io/title: "Example Autoprocessing Routines"
     workflows.argoproj.io/description: |
-        Run b18 snr + repetitions routines from autoprocessing notebooks. \\
+        Run b18 snr + repetitions routines from autoprocessing notebooks.
         This will either use fake data or Cu formate scans in the directory: 
         /dls/science/groups/das/ExampleData/b18/nexus.
     workflows.diamond.ac.uk/repository: |
         "https://github.com/DiamondLightSource/spectroscopy-workflows"
     workflows.diamond.ac.uk/parameter-schema: |
       {{- .Files.Get "schema/example-autoprocessing.json" | nindent 6 }}
+    workflows.diamond.ac.uk/ui-schema: |
+      {{- .Files.Get "schema/example-autoprocessing_ui.json" | nindent 6 }}
 
 spec:
   entrypoint: start
@@ -107,26 +109,17 @@ spec:
           if "," in pattern:
               file_range = pattern.replace(" ", "").split(",")
           elif "-" in pattern:
-              file_range = np.arange(int(pattern.split("-")[0]), int(pattern.split("-")[-1])+1)
+              file_range = range(int(pattern.split("-")[0]), int(pattern.split("-")[-1])+1)
           else:
               file_range = [pattern]
+          print("using range: ", file_range)
           allmatch = []
           if file_range is not None:
-              for f in file_range:
-                  pattern = f"\d{{6}}_Cu_formate_{f}.nxs"
-                  try:
-                      allmatch.append(re.findall(pattern, str(files))[0])
-                  except:
-                      continue
+              allmatch = [file for file in files for f in file_range\
+                          if file[6:] == f"_Cu_formate_{f}.nxs"]
 
-          if len(allmatch) < 1:
-              raise ValueError("Scan number not found.")
-        
-          allmatch = [f"/data/{f}" for f in allmatch]
-          if len(allmatch) == 1:
-              return allmatch[0]
-          else:
-              return allmatch
+          if len(allmatch) < 1: raise ValueError("Scan number not found.")
+          return allmatch
 
         paths = group_files(scan_numbers)
         data = read_data(paths)
