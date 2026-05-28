@@ -1,5 +1,5 @@
 apiVersion: v2
-name: spectroscopy-demos
+name: spectroscopy-workflows
 description: Example workflows for spectroscopic data analysis
 type: application
 version: 0.0.1
