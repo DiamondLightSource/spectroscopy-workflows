@@ -1,0 +1,45 @@
+{
+    "type": "HorizontalLayout",
+    "elements": [
+        {
+        "type":  "Control",
+        "scope": "#/properties/scan_numbers",
+        "label": "Scan Numbers"
+        },
+        {
+        "type": "VerticalLayout",
+        "elements": [
+                {
+                "type": "HorizontalLayout",
+                "elements": [ 
+                        {
+                        "type": "Control",
+                        "scope": "#/properties/formula",
+                        "label": "Chemical Formula"
+                        },
+                        {
+                        "type": "Control",
+                        "scope": "#/properties/generate_data",
+                        "label": "Use Generated Data?"
+                        }
+                    ]
+                },
+            {
+                "type": "Control",
+                "scope":"#/properties/absorbing_atom", 
+                "label": "Absorbing Atom"
+            },
+            {
+                "type":"Control",
+                "scope":"#/properties/edge",
+                "label":"Absorption Edge"
+            },
+            {
+                "type":"Control",
+                "scope":"#/properties/nscans",
+                "label":"Number of scans"
+            }
+            ]
+        }
+    ]
+}
