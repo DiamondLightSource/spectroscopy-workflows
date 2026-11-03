@@ -1,0 +1,32 @@
+{
+    "type": "VerticalLayout",
+    "elements": [
+        {
+        "type": "HorizontalLayout",
+        "elements": 
+        [
+            {
+                "type": "Control",
+                "scope":"#/properties/scan_no",
+                "label": "Scan Number"
+                }
+            ]
+        },
+        {
+        "type": "HorizontalLayout",
+        "elements": 
+            [
+            {
+                "type": "Control",
+                "scope": "#/properties/xname",
+                "label": "X Dataset Name"
+                },
+            {
+                "type": "Control",
+                "scope":"#/properties/yname",
+                "label": "Y Dataset Name"
+                }
+            ]
+        }
+    ]
+}

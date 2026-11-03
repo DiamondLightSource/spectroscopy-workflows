@@ -1,0 +1,17 @@
+{
+    "type": "object",
+    "properties": {
+        "scan_no": {
+            "type": "string",
+            "default": "3337"
+            },
+        "xname": {
+            "type":"string",
+            "default": "inenc-1-val_dataset"
+            },
+        "yname": {
+            "type":"string",
+            "default": "fmc_in-val1_dataset"
+            }
+    }
+}
