@@ -35,8 +35,8 @@ jobs:
         id: push
         uses: docker/build-push-action@v6.18.0
         with:
-          context: images/base
-          file: images/base/Dockerfile
+          context: images/initial
+          file: images/initial/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
