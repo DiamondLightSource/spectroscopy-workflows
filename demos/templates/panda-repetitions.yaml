@@ -25,7 +25,6 @@ spec:
           configMapKeyRef:
             name: sessionspaces
             key: data_directory
-      - name: scan_no
       - name: xname
       - name: yname
 
