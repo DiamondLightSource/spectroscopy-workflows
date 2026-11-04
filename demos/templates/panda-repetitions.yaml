@@ -36,7 +36,7 @@ spec:
       type: Directory
   - name: data
     hostPath:
-      path: "`{{ workflow.parameters.fpath }}`"
+      path: "{{`{{ workflow.parameters.fpath }}`}}"
       type: File
 
   volumeClaimTemplates:
@@ -56,7 +56,7 @@ spec:
         
         command: [bash]
         source: |
-            echo '{{ `{{.Files.Get "notebooks/panda-repetitions.ipynb"}}` }}' | base64 -d > /tmp/notebook.ipynb
+            echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
 
             source /build/.venv/bin/activate
             uv run -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
