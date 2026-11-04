@@ -56,7 +56,7 @@ spec:
           mountPath: "{{`{{ workflow.parameters.visit_dir }}`}}"
         command: [bash]
         source: |
-            echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" }}' | base64 -d > /tmp/notebook.ipynb
+            echo '{{ `{{.Files.Get "notebooks/panda-repetitions.ipynb"}}` }}' | base64 -d > /tmp/notebook.ipynb
             source /build/.venv/bin/activate
             uv run -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
             -p visit_dir "{{ `{{workflow.parameters.visit_dir}}` }}" \
