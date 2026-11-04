@@ -56,7 +56,7 @@ spec:
         command: [bash]
         source: |
             echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
-            source /build/.venv/bin/activate
+            source /app/.venv/bin/activate
             uv run -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
             -p xname "{{ `workflow.parameters.xname` }}" \
             -p yname "{{ `workflow.parameters.yname` }}"
