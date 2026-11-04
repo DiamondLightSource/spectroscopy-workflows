@@ -4,11 +4,10 @@
         {
         "type": "HorizontalLayout",
         "elements": 
-        [
-            {
+        [   {
                 "type": "Control",
-                "scope":"#/properties/scan_no",
-                "label": "Scan Number"
+                "scope": "#/properties/fpath",
+                "label": "Path to File"
                 }
             ]
         },
