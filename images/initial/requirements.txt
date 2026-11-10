@@ -1,3 +1,4 @@
 git+https://github.com/DiamondLightSource/xas_toolbox.git@main
 ipykernel == 7.4.0
 papermill == 2.7.0
+nbconvert == 7.17.2
