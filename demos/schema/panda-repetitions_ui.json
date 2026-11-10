@@ -8,9 +8,15 @@
                 "type": "Control",
                 "scope": "#/properties/fpath",
                 "label": "Path to File"
-                }
+                },
+            {
+            "type": "Control",
+            "scope": "#/properties/tiled_id",
+            "label": "Tiled ID"
+            }
             ]
         },
+        
         {
         "type": "HorizontalLayout",
         "elements": 
