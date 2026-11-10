@@ -11,6 +11,10 @@
             },
         "fpath": {
             "type": "string"
+        },
+        "tiled_id": {
+            "type": "string",
+            "default": ""
         }
     }
 }
