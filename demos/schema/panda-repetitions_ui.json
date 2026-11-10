@@ -14,8 +14,8 @@
             "scope": "#/properties/tiled_id",
             "label": "Tiled ID"
             }
-            ]
-        },
+        ]
+    },
         
         {
         "type": "HorizontalLayout",
