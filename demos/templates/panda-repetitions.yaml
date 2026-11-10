@@ -28,6 +28,7 @@ spec:
       - name: xname
       - name: yname
       - name: tiled_id
+      - name: fpath
 
   volumes:
   - name: session
@@ -61,7 +62,7 @@ spec:
             python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
             -p xname "{{ `workflow.parameters.xname` }}" \
             -p yname "{{ `workflow.parameters.yname` }}" \
-            -p tiled_id "{{  `workflow.parameters.tiled_id `}}"
+            -p tiled_id "{{ `workflow.parameters.tiled_id` }}"
             python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
         volumeMounts:
         - name: tmp

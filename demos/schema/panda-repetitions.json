@@ -14,7 +14,7 @@
         },
         "tiled_id": {
             "type": "string",
-            "default": ""
+            "default": "abcd-1234"
         }
     }
 }
