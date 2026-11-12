@@ -71,6 +71,12 @@ spec:
           mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
         - name: data
           mountPath: /data/data.h5
+        env:
+        - name: HOME
+          value: /tmp
+        - name: MPLCONFIGDIR
+          value: /tmp/MPLCONFIGDIR
+
 
       outputs:
         artifacts:
