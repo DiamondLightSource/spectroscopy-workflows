@@ -54,8 +54,7 @@ spec:
   templates:
     - name: panda-repetitions
       script:
-        image: ghcr.io/diamondlightsource/spectroscopy-workflows:0.1.0-rc.6
-        
+        image: docker.io/library/python:bookworm
         command: [bash]
         source: |
             echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
