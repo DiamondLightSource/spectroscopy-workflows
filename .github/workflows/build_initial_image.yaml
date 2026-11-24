@@ -1,4 +1,4 @@
-name: Publish Image
+name: Publish Base Docker image to GitHub Packages
 on:
   release:
     types: [published]
@@ -35,8 +35,8 @@ jobs:
         id: push
         uses: docker/build-push-action@v6.18.0
         with:
-          context: images/initial
-          file: images/initial/Dockerfile
+          context: images/base
+          file: images/base/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -52,27 +52,20 @@ spec:
       storageClassName: netapp
     
   templates:
-    - name: mount-nb
+    - name: run-workflow
       script:
-        image: docker.io/library/python:bookworm
+        image: ghcr.io/diamondlightsource/spectroscopy-workflows:0.1.0-rc.2
         command: [bash]
         source: |
           echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
-          echo '{{ .Files.Get "notebooks/requirements.txt" | b64enc }}' | base64 -d > /tmp/requirements.txt
-        volumeMounts:
-          - name: tmp
-            mountPath: /tmp
-    - name: run-nb
-      script:
-        image: docker.io/library/python:bookworm
-        command: [bash]
-        source: |
-          python -m venv /tmp/venv
-          /tmp/venv/bin/pip install -r /tmp/requirements.txt
-          /tmp/venv/bin/python -m ipykernel install --prefix=/tmp/venv --name=venv
-          /tmp/venv/bin/python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
+          python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
           -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
-          /tmp/venv/bin/python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
+          python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
+        env:
+          - name: HOME
+            value: /tmp
+          - name: MPLCONFIGDIR
+            value: /tmp/MPLCONFIGDIR
         volumeMounts:
           - name: tmp
             mountPath: /tmp
@@ -80,12 +73,7 @@ spec:
             mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
           - name: data
             mountPath: /data/data.h5
-        env:
-          - name: HOME
-            value: /tmp
-          - name: MPLCONFIGDIR
-            value: /tmp/MPLCONFIGDIR
-
+      
       outputs:
         artifacts:
           - name: notebook
@@ -106,8 +94,5 @@ spec:
     - name: start
       dag:
         tasks:
-          - name: mount
-            template: mount-nb
-          - name: run-analysis
-            template: mount-nb
-            dependencies: [mount]
+          - name: do-analysis
+            template: run-workflow
