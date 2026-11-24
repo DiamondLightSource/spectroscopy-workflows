@@ -38,7 +38,7 @@ spec:
       type: Directory
   - name: data
     hostPath:
-      path: /dls/"{{`{{  workflow.parameters.beamline }}`}}"/"{{`{{ workflow.parameters.year }}`}}"/"{{`{{ workflow.parameters.data_dir }}`}}"/"{{`{{ workflow.parameters.scan_no }}`}}".nxs
+      path: "/dls/{{`{{ workflow.parameters.beamline }}`}}/{{`{{ workflow.parameters.year }}`}}/data/{{`{{ workflow.parameters.data_dir }}`}}/{{`{{ workflow.parameters.scan_no }}`}}.nxs"
       type: File
 
   volumeClaimTemplates:
