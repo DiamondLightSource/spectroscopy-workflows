@@ -54,7 +54,7 @@ spec:
   templates:
     - name: run-workflow
       script:
-        image: ghcr.io/diamondlightsource/spectroscopy-workflows
+        image: ghcr.io/diamondlightsource/spectroscopy-workflows:0.1.0-rc.2
         command: [bash]
         source: |
           echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
