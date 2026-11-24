@@ -6,14 +6,20 @@
         "elements": 
         [   {
                 "type": "Control",
-                "scope": "#/properties/fpath",
-                "label": "Path to File"
+                "scope": "#/properties/beamline",
+                "label": "Beamline Name"
                 },
+
             {
-            "type": "Control",
-            "scope": "#/properties/tiled_id",
-            "label": "Tiled ID"
-            }
+                "type": "Control",
+                "scope": "#/properties/year",
+                "label": "Year"
+            },
+            {
+                "type": "Control",
+                "scope":"#/properties/data_dir",
+                "label": "Data Directory"
+            } 
         ]
     },
         
@@ -21,15 +27,15 @@
         "type": "HorizontalLayout",
         "elements": 
             [
-            {
+                {
                 "type": "Control",
-                "scope": "#/properties/xname",
-                "label": "X Dataset Name"
+                "scope":"#/properties/scan_no",
+                "label": "Scan Number"
                 },
-            {
+                {
                 "type": "Control",
-                "scope":"#/properties/yname",
-                "label": "Y Dataset Name"
+                "scope": "#/properties/tiled_id",
+                "label": "Tiled ID"
                 }
             ]
         }

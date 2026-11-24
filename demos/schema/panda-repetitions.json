@@ -1,17 +1,28 @@
 {
     "type": "object",
+
     "properties": {
-        "xname": {
-            "type":"string",
-            "default": "inenc-1-val_dataset"
-            },
-        "yname": {
-            "type":"string",
-            "default": "fmc_in-val1_dataset"
-            },
-        "fpath": {
-            "type": "string"
+
+        "beamline": {
+            "type": "string",
+            "default": "p51"
         },
+
+        "year": {
+            "type": "string",
+            "default": "2026"
+        },
+
+        "data_dir": {
+            "type": "string",
+            "default": "cm44254-1"
+        },
+
+        "scan_no": {
+            "type": "string",
+            "default": "3452"
+        },
+
         "tiled_id": {
             "type": "string",
             "default": "abcd-1234"
