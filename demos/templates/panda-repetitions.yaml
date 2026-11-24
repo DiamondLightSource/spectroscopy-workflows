@@ -53,35 +53,38 @@ spec:
     
   templates:
     - name: mount-nb
-      command: bash
-      source: |
-        echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
-        echo '{{ .Files.Get "notebooks/requirements.txt" | b64enc }}' | base64 -d > /tmp/requirements.txt
-      volumeMounts:
-        - name: tmp
-          mountPath: /tmp
+      script:
+        image: docker.io/library/python:bookworm
+        command: [bash]
+        source: |
+          echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
+          echo '{{ .Files.Get "notebooks/requirements.txt" | b64enc }}' | base64 -d > /tmp/requirements.txt
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
     - name: run-nb
-      image: docker.io/library/python:bookworm
-      command: [bash]
-      source: |
-        python -m venv /tmp/venv
-        /tmp/venv/bin/pip install -r /tmp/requirements.txt
-        /tmp/venv/bin/python -m ipykernel install --prefix=/tmp/venv --name=venv
-        /tmp/venv/bin/python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
-        -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
-        /tmp/venv/bin/python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
-      volumeMounts:
-        - name: tmp
-          mountPath: /tmp
-        - name: session
-          mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
-        - name: data
-          mountPath: /data/data.h5
-      env:
-        - name: HOME
-          value: /tmp
-        - name: MPLCONFIGDIR
-          value: /tmp/MPLCONFIGDIR
+      script:
+        image: docker.io/library/python:bookworm
+        command: [bash]
+        source: |
+          python -m venv /tmp/venv
+          /tmp/venv/bin/pip install -r /tmp/requirements.txt
+          /tmp/venv/bin/python -m ipykernel install --prefix=/tmp/venv --name=venv
+          /tmp/venv/bin/python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
+          -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
+          /tmp/venv/bin/python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: session
+            mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
+          - name: data
+            mountPath: /data/data.h5
+        env:
+          - name: HOME
+            value: /tmp
+          - name: MPLCONFIGDIR
+            value: /tmp/MPLCONFIGDIR
 
       outputs:
         artifacts:
