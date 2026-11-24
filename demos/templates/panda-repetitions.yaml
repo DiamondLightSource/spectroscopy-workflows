@@ -25,10 +25,11 @@ spec:
           configMapKeyRef:
             name: sessionspaces
             key: data_directory
-      - name: xname
-      - name: yname
       - name: tiled_id
-      - name: fpath
+      - name: year
+      - name: beamline
+      - name: scan_no
+      - name: data_dir
 
   volumes:
   - name: session
@@ -37,7 +38,7 @@ spec:
       type: Directory
   - name: data
     hostPath:
-      path: "{{`{{ workflow.parameters.fpath }}`}}"
+      path: /dls/"{{`{{  workflow.parameters.beamline }}`}}"/"{{`{{ workflow.parameters.year }}`}}"/"{{`{{ workflow.parameters.data_dir }}`}}"/"{{`{{ workflow.parameters.scan_no }}`}}".nxs
       type: File
 
   volumeClaimTemplates:
@@ -60,9 +61,7 @@ spec:
             echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
 
             python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
-            -p xname "{{ `workflow.parameters.xname` }}" \
-            -p yname "{{ `workflow.parameters.yname` }}" \
-            -p tiled_id "{{ `workflow.parameters.tiled_id` }}"
+            -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
             python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
         volumeMounts:
         - name: tmp
@@ -76,7 +75,6 @@ spec:
           value: /tmp
         - name: MPLCONFIGDIR
           value: /tmp/MPLCONFIGDIR
-
 
       outputs:
         artifacts:
