@@ -52,9 +52,9 @@ spec:
       storageClassName: netapp
     
   templates:
-    - name: run-workflow
+    - name: run-notebook
       script:
-        image: ghcr.io/diamondlightsource/spectroscopy-workflows:0.1.0-rc.2
+        image: ghcr.io/diamondlightsource/spectroscopy-workflows:latest
         command: [bash]
         source: |
           echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
@@ -94,5 +94,5 @@ spec:
     - name: start
       dag:
         tasks:
-          - name: do-analysis
-            template: run-workflow
+          - name: run-analysis
+            template: run-notebook
