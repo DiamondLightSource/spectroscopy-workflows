@@ -61,6 +61,11 @@ spec:
           python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
           -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
           python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
+        env:
+        - name: HOME
+          value: /tmp
+        - name: MPLCONFIGDIR
+          value: /tmp/MPLCONFIGDIR
       volumeMounts:
         - name: tmp
           mountPath: /tmp
@@ -68,11 +73,7 @@ spec:
           mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
         - name: data
           mountPath: /data/data.h5
-      env:
-        - name: HOME
-          value: /tmp
-        - name: MPLCONFIGDIR
-          value: /tmp/MPLCONFIGDIR
+     
 
       outputs:
         artifacts:
