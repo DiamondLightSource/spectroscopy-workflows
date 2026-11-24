@@ -57,11 +57,7 @@ spec:
         image: ghcr.io/diamondlightsource/spectroscopy-workflows:latest
         command: [bash]
         source: |
-        # mount notebook here:
-          echo which python
-          echo which papermill
           echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
-        # run notebook here
           python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
           -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
           python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
