@@ -52,7 +52,7 @@ spec:
       storageClassName: netapp
     
   templates:
-    - name: mount-nb
+    - name: run-workflow
       script:
         image: ghcr.io/diamondlightsource/spectroscopy-workflows
         command: [bash]
@@ -61,18 +61,18 @@ spec:
           python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
           -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
           python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
-        volumeMounts:
-          - name: tmp
-            mountPath: /tmp
-          - name: session
-            mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
-          - name: data
-            mountPath: /data/data.h5
-        env:
-          - name: HOME
-            value: /tmp
-          - name: MPLCONFIGDIR
-            value: /tmp/MPLCONFIGDIR
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: session
+          mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
+        - name: data
+          mountPath: /data/data.h5
+      env:
+        - name: HOME
+          value: /tmp
+        - name: MPLCONFIGDIR
+          value: /tmp/MPLCONFIGDIR
 
       outputs:
         artifacts:
@@ -94,8 +94,5 @@ spec:
     - name: start
       dag:
         tasks:
-          - name: mount
-            template: mount-nb
-          - name: run-analysis
-            template: mount-nb
-            dependencies: [mount]
+          - name: do-analysis
+            template: run-workflow
