@@ -54,12 +54,11 @@ spec:
   templates:
     - name: panda-repetitions
       script:
-        image: ghcr.io/diamondlightsource/spectroscopy-workflows:latest
+        image: ghcr.io/diamondlightsource/spectroscopy-workflows:0.1.0-rc.6
         
         command: [bash]
         source: |
             echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
-
             python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
             -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
             python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
