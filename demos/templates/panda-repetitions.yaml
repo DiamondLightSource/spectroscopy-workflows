@@ -62,19 +62,18 @@ spec:
           -p tiled_id "{{ `workflow.parameters.tiled_id` }}" \
           python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
         env:
-        - name: HOME
-          value: /tmp
-        - name: MPLCONFIGDIR
-          value: /tmp/MPLCONFIGDIR
-      volumeMounts:
-        - name: tmp
-          mountPath: /tmp
-        - name: session
-          mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
-        - name: data
-          mountPath: /data/data.h5
-     
-
+          - name: HOME
+            value: /tmp
+          - name: MPLCONFIGDIR
+            value: /tmp/MPLCONFIGDIR
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: session
+            mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
+          - name: data
+            mountPath: /data/data.h5
+      
       outputs:
         artifacts:
           - name: notebook
