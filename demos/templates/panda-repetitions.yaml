@@ -72,7 +72,7 @@ spec:
           type: Directory
       - name: data
         hostPath:
-          path: "/dls/{{`{{ workflow.parameters.beamline }}`}}/data"
+          path: "/dls/{{`{{ workflow.parameters.beamline }}`}}/data/{{`{{workflow.parameters.year}}`}}/{{`{{workflow.parameters.data_dir}}`}}"
           type: Directory
 
       outputs:
