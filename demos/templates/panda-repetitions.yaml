@@ -31,16 +31,6 @@ spec:
       - name: scan_no
       - name: data_dir
 
-  volumes:
-  - name: session
-    hostPath:
-      path: "{{`{{ workflow.parameters.visitdir }}`}}"
-      type: Directory
-  - name: data
-    hostPath:
-      path: "/dls/{{`{{ workflow.parameters.beamline }}`}}/data/{{`{{ workflow.parameters.year }}`}}/{{`{{ workflow.parameters.data_dir }}`}}/{{`{{ workflow.parameters.scan_no }}`}}.nxs"
-      type: File
-
   volumeClaimTemplates:
   - metadata:
       name: tmp
@@ -59,7 +49,8 @@ spec:
         source: |
           echo '{{ .Files.Get "notebooks/panda-repetitions.ipynb" | b64enc }}' | base64 -d > /tmp/notebook.ipynb
           python -m papermill /tmp/notebook.ipynb /tmp/notebook.ipynb \
-          -p tiled_id "{{ `{{workflow.parameters.tiled_id}}` }}"
+          -p tiled_id "{{ `{{workflow.parameters.tiled_id}}` }}" \
+          -p file_name "{{`{{workflow.parameters.scan_no}}`}}"
           python -m nbconvert --to html --output notebook --output-dir /tmp /tmp/notebook.ipynb
         env:
           - name: HOME
@@ -72,7 +63,18 @@ spec:
           - name: session
             mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
           - name: data
-            mountPath: /data/data.nxs
+            mountPath: /data
+
+        volumes:
+        - name: session
+          hostPath:
+            path: "{{`{{ workflow.parameters.visitdir }}`}}"
+            type: Directory
+        - name: data
+          hostPath:
+            path: "/dls/{{`{{ workflow.parameters.beamline }}`}}/data"
+            type: Directory
+
       
       outputs:
         artifacts:
