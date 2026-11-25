@@ -65,17 +65,16 @@ spec:
           - name: data
             mountPath: /data
 
-        volumes:
-        - name: session
-          hostPath:
-            path: "{{`{{ workflow.parameters.visitdir }}`}}"
-            type: Directory
-        - name: data
-          hostPath:
-            path: "/dls/{{`{{ workflow.parameters.beamline }}`}}/data"
-            type: Directory
+      volumes:
+      - name: session
+        hostPath:
+          path: "{{`{{ workflow.parameters.visitdir }}`}}"
+          type: Directory
+      - name: data
+        hostPath:
+          path: "/dls/{{`{{ workflow.parameters.beamline }}`}}/data"
+          type: Directory
 
-      
       outputs:
         artifacts:
           - name: notebook
