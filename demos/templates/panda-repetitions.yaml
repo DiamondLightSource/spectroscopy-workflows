@@ -64,6 +64,11 @@ spec:
             mountPath: "{{`{{ workflow.parameters.visitdir }}`}}"
           - name: data
             mountPath: /data
+        resources:
+          requests:
+            memory: 1Gi
+          limits:
+            memory: 2Gi
 
       volumes:
       - name: session
