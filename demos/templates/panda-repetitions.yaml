@@ -86,12 +86,17 @@ spec:
             path: /tmp/notebook.html
             archive:
               none: {}
+              
           - name: plot
             path: /tmp/plot_result.png
+            archive:
+              none: {}
+
           - name: pca_plot
             path: /tmp/plot_pca.png
             archive:
               none: {}
+
           - name: report
             path: /tmp/report.json
             archive:
